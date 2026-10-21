@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=SAPÉ d-MCP
+GenericName=Database access for LLMs
+Comment=Controlled database access with granular permissions for LLMs
+Exec=@EXEC@
+Icon=sape-d-mcp
+Terminal=false
+Categories=Development;Database;
+Keywords=MCP;database;SQL;permissions;LLM;
+StartupWMClass=sape-d-mcp

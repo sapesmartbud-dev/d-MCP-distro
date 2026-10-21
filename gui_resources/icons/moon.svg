@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Moon icon for light mode - dark color (#212832) -->
+  <!-- Moon shape: crescent formed by two overlapping circles -->
+  <path d="M 10 16 A 8 8 0 1 0 24 16 A 6.5 6.5 0 1 1 10 16" fill="#212832"/>
+</svg>

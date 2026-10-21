@@ -1,0 +1,14 @@
+#!/bin/sh
+# SAPÉ d-MCP — AppImage entry point.
+#
+# The three databases are created in the current working directory
+# (src/sape_d_mcp/db_location.py). From a terminal that is the user's own directory and is
+# kept. A file manager or launcher may start the AppImage from "/" or another unwritable
+# directory; only then does this script switch to the per-user data directory, so the
+# databases never land somewhere they cannot be written.
+HERE="$(dirname "$(readlink -f "$0")")"
+if [ "$(pwd)" = "/" ] || [ ! -w "$(pwd)" ]; then
+    DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/sape/d-mcp"
+    mkdir -p "$DATA_DIR" && cd "$DATA_DIR"
+fi
+exec "$HERE/usr/lib/sape-d-mcp/sape-d-mcp" "$@"

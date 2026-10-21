@@ -1,0 +1,60 @@
+# SAPÉ d-MCP — runtime dependencies for the desktop application
+# Python 3.10+ required (match/case, type union syntax).
+#
+#   pip install -r requirements.txt        the GUI, the server and every DB driver
+#   pip install "mcp>=2.0" anyio keyring cryptography sqlparse   the server alone
+#                                           (--cli), no Qt, plus whichever driver(s)
+#                                           the connection profiles you use need
+#
+# Development tools are not installed here — see requirements-dev.txt.
+
+# Model Context Protocol server framework.
+# The server imports mcp.server.MCPServer, which is a 2.x API; 1.x fails at import.
+mcp>=2.0
+
+# Desktop GUI framework. Needed only for the GUI: main.py --cli runs headless
+# and never imports PyQt6.
+PyQt6>=6.6.1
+
+# Used directly: BlockingPortal bridges the Qt thread and the server's event
+# loop for the confirmation broker, and CancelScope drives clean shutdown.
+# Declared explicitly rather than relying on it arriving transitively through
+# mcp — that works only until mcp changes async backend or loosens its own
+# pin, and then it breaks with nothing in the project explaining why.
+anyio>=4.0
+
+# OS credential stores (Windows Credential Manager, macOS Keychain, Secret
+# Service on Linux) for database passwords.
+keyring>=24.0
+
+# AES fallback where no keyring backend exists (e.g. a headless Linux box
+# with no Secret Service running); also required by both MySQL drivers below
+# for caching_sha2_password.
+cryptography>=42.0
+
+# Statement classification in sql_guard: distinguishes SELECT from DDL/DML
+# and blocks multi-statement batches so a DROP cannot ride along inside one.
+sqlparse>=0.5
+
+# MS-SQL, default driver. Needs the system Microsoft ODBC Driver 18 —
+# ships alongside pymssql below so the multi-platform promise never depends
+# on that external installer being reachable.
+pyodbc>=5.0
+
+# MS-SQL, self-contained alternative. FreeTDS is compiled into the wheel, so
+# it works with no system driver install, unlike pyodbc above.
+pymssql>=2.3
+
+# PostgreSQL. The [binary] extra bundles libpq, so no system Postgres client
+# library is required.
+psycopg[binary]>=3.1
+
+# MySQL/MariaDB, pure Python — no compiled extension or system client
+# library needed.
+PyMySQL>=1.1
+
+# MySQL/MariaDB, Oracle's own driver — an alternative to PyMySQL for
+# environments that prefer or require it.
+mysql-connector-python>=8.3
+
+# SQLite is Python's standard library (sqlite3) — no separate requirement.

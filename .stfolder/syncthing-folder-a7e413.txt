@@ -1,0 +1,5 @@
+# This directory is a Syncthing folder marker.
+# Do not delete.
+
+folderID: ditzg-ecqda
+created: 2026-10-03T22:58:14+02:00

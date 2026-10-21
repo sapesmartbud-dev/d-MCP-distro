@@ -1,0 +1,263 @@
+[build-system]
+requires = ["setuptools>=77.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sape-d-mcp"
+dynamic = ["version"]
+description = "SAPÉ d-MCP: controlled database access with granular permission management for LLMs"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "SAPÉ smart bud", email = "info@sapebud.com"}]
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+keywords = ["mcp", "model-context-protocol", "database", "databases", "sql", "permissions", "ai", "llm"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+    # Four database-domain topics, deliberately avoiding "Database Engines
+    # /Servers": d-MCP fronts other engines, it is not one itself.
+    "Topic :: Database",
+    "Topic :: Database :: Front-Ends",
+    "Topic :: Security",
+    "Topic :: System :: Systems Administration",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    # The server imports mcp.server.MCPServer, a 2.x API; a lower floor lets
+    # a resolver install 1.x, which fails at import.
+    "mcp>=2.0",
+    # GUI only — main.py --cli never imports it, so a headless install can
+    # still omit Qt if the caller pins its own dependency set with --no-deps.
+    "PyQt6>=6.6.1",
+    # Used directly (BlockingPortal for the confirmation broker, CancelScope
+    # for shutdown) rather than relied upon transitively through mcp — see
+    # requirements.txt for why that distinction matters.
+    "anyio>=4.0",
+    # OS credential stores for database passwords.
+    "keyring>=24.0",
+    # AES fallback where no keyring backend exists; also needed by both
+    # MySQL drivers for caching_sha2_password.
+    "cryptography>=42.0",
+    # Statement classification and multi-statement blocking in sql_guard.
+    "sqlparse>=0.5",
+    # MS-SQL, default — needs the system Microsoft ODBC Driver 18.
+    "pyodbc>=5.0",
+    # MS-SQL, self-contained alternative — FreeTDS is compiled into the wheel.
+    "pymssql>=2.3",
+    # PostgreSQL — the [binary] extra bundles libpq.
+    "psycopg[binary]>=3.1",
+    # MySQL/MariaDB, pure Python.
+    "PyMySQL>=1.1",
+    # MySQL/MariaDB, Oracle's driver alternative.
+    "mysql-connector-python>=8.3",
+    # sqlite3 is the Python standard library — no requirement.
+]
+
+[project.optional-dependencies]
+# Identical to requirements-dev.txt's own list (excluding the -r line, which
+# has no meaning here since `dependencies` above already covers it). f-MCP
+# let this drift from requirements-dev.txt; d-MCP does not.
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-qt>=4.2",
+    "ruff>=0.1.0",
+    "mypy>=1.0",
+    "black>=23.0",
+]
+
+[project.scripts]
+sape-d-mcp = "sape_d_mcp.main:run"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "sape_d_mcp._version.__version__"}
+
+[tool.setuptools.package-data]
+# QSS files live inside the package, so plain package-data is enough for
+# them (none shipped yet — stage 3 adds application.qss / application_light.qss).
+"sape_d_mcp.gui.styles" = ["*.qss"]
+
+[tool.setuptools.data-files]
+# gui_resources/ and legal-documents/ sit outside src/, by design (Stack.md
+# §6): they are consumed by both a source checkout (`python main.py`) and a
+# PyInstaller bundle at the same relative paths, and folding them into the
+# package would mean either duplicating them or teaching every consumer two
+# different lookup rules. data-files is the mechanism that installs them at
+# a predictable location relative to sys.prefix without moving them out of
+# the checkout layout the rest of the project relies on — a MANIFEST.in
+# would only affect the sdist, not what actually lands next to the console
+# script in a wheel install, and relocating the trees under src/sape_d_mcp
+# would break the "gui_resources next to main.py" assumption the frozen
+# build and the dev checkout both make. The resource helper added in stage 3
+# (src/sape_d_mcp/gui/resources.py) is responsible for finding them under
+# sys._MEIPASS (frozen), the checkout root (dev) or sys.prefix (pip install)
+# in that order.
+"gui_resources/flags" = ["gui_resources/flags/*.png", "gui_resources/flags/mapping.txt"]
+"gui_resources/icons" = ["gui_resources/icons/*"]
+"gui_resources/logos" = ["gui_resources/logos/*"]
+"legal-documents/en-US" = ["legal-documents/en-US/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[project.urls]
+Homepage = "https://sapebud.com"
+Repository = "https://github.com/sapebud/d-mcp"
+Documentation = "https://docs.sapebud.com"
+
+[tool.ruff]
+# requires-python = ">=3.10" (above) is the floor; nothing here may assume 3.11+.
+target-version = "py310"
+# Measured, not imposed: src/ is 39 920 lines and, aside from the one generated
+# file exempted below, its longest genuine line is 118 columns (a handful of
+# permissions.py/mcp_server.py/sql_guard.py lines that stay under one call or one
+# f-string rather than wrapping mid-expression). 120 is the smallest round number
+# that admits the codebase as it already is, well past black's 88-column default,
+# which this project never adopted.
+line-length = 120
+# ./_Old is out of bounds per CLAUDE.md and is not to be read or used; excluded
+# explicitly rather than relying on it staying empty.
+extend-exclude = ["_Old"]
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # isort — import ordering/grouping
+    "UP",    # pyupgrade — modern syntax for the >=3.10 floor
+    "B",     # flake8-bugbear — likely bugs and design smells
+    "C4",    # flake8-comprehensions
+    "SIM",   # flake8-simplify
+    "RUF",   # ruff-specific rules
+    "BLE",   # flake8-blind-except — see the house-pattern note below
+    "EXE",   # flake8-executable — see the VirtualBox-mount note below
+    "ISC",   # flake8-implicit-str-concat
+]
+ignore = [
+    # DEVELOPMENT-PLAN.md fixes the tool-body shape copied verbatim from f-MCP:
+    # `try: ... emit_success ... except Exception as e: emit_error; raise` in
+    # every one of the 38 MCP tools, plus the same defensive shape around
+    # getpass/keyring/log-store calls elsewhere (18 files, 64 sites today). That
+    # is a deliberate, documented convention, not 64 individual lapses, so the
+    # rule is disabled outright rather than answered with 64 `# noqa: BLE001`
+    # comments that would just be restating the same house rule 64 times.
+    "BLE001",
+    # EXE001/EXE002 infer "is this file meant to be executable?" from the
+    # filesystem's executable bit. Every file on this VirtualBox share reports
+    # mode 0775 regardless of what git actually has recorded, so both rules
+    # read the mount, not the code: `chmod -x` on any of these files changes
+    # nothing here and would not survive a fresh checkout on a real filesystem.
+    # Neither rule can ever produce a real signal in this environment.
+    "EXE001",
+    "EXE002",
+]
+# The project's typographic punctuation is deliberate, not a mis-encoding: en
+# dashes in ranges and parenthetical asides, the multiplication sign in pixel
+# dimensions (3660×920), and the information-source glyph in the sidebar's
+# icon list (nav_icons mirrors the emoji f-MCP itself uses). RUF001/002/003
+# would otherwise ask every one of these to be flattened to ASCII, which is
+# exactly the "mangled prose" the house style forbids — see sape-house-style.
+allowed-confusables = ["–", "×", "ℹ"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["sape_d_mcp"]
+
+[tool.ruff.lint.per-file-ignores]
+# gui/i18n/translations.py is machine-generated — its own module docstring says
+# so — one dict entry per translation key with a string per locale on the line.
+# A line holding eighteen languages' worth of text is long by construction, and
+# the file is "generated, never hand-edited" precisely so nobody wraps it by
+# hand either.
+"src/sape_d_mcp/gui/i18n/translations.py" = ["E501"]
+# tools/generate_translations.py is the script that produces the file above,
+# and its own source dicts (CONNECTIONS, PERMISSIONS, etc.) hold the same
+# shape: one dict entry per key with the authored en-US/es-ES string pair on
+# a single line. Wrapping these by hand would fight the same one-row-per-key
+# convention the generated file is exempted for, and for the same reason —
+# it makes diffing which key changed trivial, which a multi-line wrap undoes.
+"tools/generate_translations.py" = ["E501"]
+# These two `__all__` lists are deliberately grouped by originating submodule
+# (db/__init__.py) or by section (db/dialects/__init__.py: Vocabulary, Interface,
+# Concrete dialects, Registry, Exceptions), with a comment naming each group —
+# db/__init__.py says so outright ("Which submodule owns each public name").
+# RUF022's own fix-safety note is that it marks its fix unsafe exactly where a
+# whole-line comment sits inside `__all__`, for exactly this reason: a flat
+# isort-style sort scatters the grouped names alphabetically and strands the
+# comments, destroying the map it was there to give. Every other `__all__` in
+# the project has no such grouping and is sorted normally.
+"src/sape_d_mcp/db/__init__.py" = ["RUF022"]
+"src/sape_d_mcp/db/dialects/__init__.py" = ["RUF022"]
+
+[tool.black]
+target-version = ["py310"]
+# Matches [tool.ruff] line-length above — the two must agree or each will
+# re-wrap what the other just formatted.
+line-length = 120
+
+[tool.mypy]
+python_version = "3.10"
+mypy_path = "src"
+files = ["src"]
+warn_unused_configs = true
+warn_redundant_casts = true
+# Caught three genuinely stale `# type: ignore` comments on first run
+# (tool_logger.py, db/connection_store.py, db/dialects/types.py) — exactly the
+# kind of drift this flag exists to find.
+warn_unused_ignores = true
+no_implicit_optional = true
+
+# `--strict` reports 34 errors in 18 files today — mostly missing parameter and
+# return annotations on functions that predate this configuration — so it is
+# not a floor this codebase can pass yet, only a target, though a close one:
+# the gap is 34 errors, not hundreds. The settings above are the floor it does
+# pass: default (non-strict) checking, plus the four warn/no-implicit flags,
+# which add real findings (the three unused-ignores noted above) without
+# requiring a single annotation to be added anywhere.
+#
+# That clean floor is conditional on the overrides below, not a fact about the
+# code independent of them: strip this `[[tool.mypy.overrides]]` table and the
+# same floor settings report 49 errors in 18 files — chiefly PyQt6 call sites
+# where Qt's own stubs erase a return type to `Any`/`object` (connections_page.py,
+# main_window.py, confirmation_bridge.py and others in gui/), plus mcp_server.py
+# and all five dialect modules. None of them is fixed here — this task is
+# configuration only — so each is named below rather than silently swallowed by
+# a blanket exclude, and each is a concrete, file-sized gap: closing it, module
+# by module, is what moves the floor from "passes because of this list" to
+# "passes without it", on the way to the 34-error `--strict` figure above.
+[[tool.mypy.overrides]]
+module = [
+    "sape_d_mcp.db.connection_store",
+    "sape_d_mcp.db.dialects.mssql",
+    "sape_d_mcp.db.dialects.mysql",
+    "sape_d_mcp.db.dialects.postgres",
+    "sape_d_mcp.db.dialects.sqlite",
+    "sape_d_mcp.db.dialects.types",
+    "sape_d_mcp.gui.confirmation_bridge",
+    "sape_d_mcp.gui.dialogs.mcp_config_dialog",
+    "sape_d_mcp.gui.dialogs.new_rule_dialog",
+    "sape_d_mcp.gui.main_window",
+    "sape_d_mcp.gui.pages.connections_page",
+    "sape_d_mcp.gui.pages.logs_page",
+    "sape_d_mcp.gui.pages.permissions_page",
+    "sape_d_mcp.gui.pages.settings_page",
+    "sape_d_mcp.gui.server_thread",
+    "sape_d_mcp.gui.splash_screen",
+    "sape_d_mcp.mcp_server",
+    "sape_d_mcp.tool_logger",
+]
+ignore_errors = true

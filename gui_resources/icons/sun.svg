@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Sun icon for dark mode - light color (#E0E2E7) -->
+  <!-- Center circle -->
+  <circle cx="16" cy="16" r="5" fill="none" stroke="#E0E2E7" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Rays -->
+  <g stroke="#E0E2E7" stroke-width="2" stroke-linecap="round">
+    <line x1="16" y1="2" x2="16" y2="5"/>
+    <line x1="16" y1="27" x2="16" y2="30"/>
+    <line x1="2" y1="16" x2="5" y2="16"/>
+    <line x1="27" y1="16" x2="30" y2="16"/>
+    <line x1="6.34" y1="6.34" x2="8.49" y2="8.49"/>
+    <line x1="23.51" y1="23.51" x2="25.66" y2="25.66"/>
+    <line x1="25.66" y1="6.34" x2="23.51" y2="8.49"/>
+    <line x1="8.49" y1="23.51" x2="6.34" y2="25.66"/>
+  </g>
+</svg>

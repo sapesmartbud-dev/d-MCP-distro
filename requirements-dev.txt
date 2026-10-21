@@ -1,0 +1,17 @@
+# SAPÉ d-MCP — development and test dependencies
+#
+#   pip install -r requirements.txt -r requirements-dev.txt
+#   pytest
+#
+# Kept identical to the [project.optional-dependencies] dev extra in
+# pyproject.toml — in f-MCP the two drifted apart (ruff and pytest-cov ended
+# up in only one of them), which is a defect d-MCP does not repeat.
+
+-r requirements.txt
+
+pytest>=7.0          # Test runner (tests/)
+pytest-cov>=4.0      # Coverage
+pytest-qt>=4.2       # GUI tests (drives PyQt6 widgets in-process)
+ruff>=0.1.0          # Linting
+mypy>=1.0            # Type checking
+black>=23.0          # Formatting

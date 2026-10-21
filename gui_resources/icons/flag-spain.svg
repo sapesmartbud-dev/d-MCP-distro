@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Spain Flag -->
+  <!-- Red top stripe -->
+  <rect x="1" y="1" width="22" height="6" fill="#C60B1E" stroke="#000000" stroke-width="0.5"/>
+
+  <!-- Yellow middle stripe (double height) -->
+  <rect x="1" y="7" width="22" height="10" fill="#FFC400"/>
+
+  <!-- Red bottom stripe -->
+  <rect x="1" y="17" width="22" height="6" fill="#C60B1E"/>
+
+  <!-- Coat of arms simplified as a small shield in the middle (optional detail) -->
+  <rect x="8" y="9" width="8" height="6" fill="#005EB8" opacity="0.3"/>
+</svg>
